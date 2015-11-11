@@ -1,22 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
-
+     >
+    
+    <TextView 
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:text="您可以输入一个网址或者任何字符串"
+        android:textSize="20sp"
+        android:background="#fe8301"
+        android:gravity="center"
+        />
+    
     <EditText
         android:id="@+id/input_text"
         android:layout_width="fill_parent"
         android:layout_height="100dp"
+        android:layout_below="@id/title"
         android:hint="@string/urihint"
+        android:background="#ffffff"
         />
     
     <Button 
         android:id="@+id/done"
         android:layout_width="fill_parent"
         android:layout_height="50dp"
+        android:layout_below="@id/input_text"
         android:text="@string/ok"
         android:onClick="onClick"
         />
 
-</LinearLayout>
+</RelativeLayout>

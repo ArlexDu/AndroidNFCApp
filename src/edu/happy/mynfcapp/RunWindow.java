@@ -1,6 +1,7 @@
 package edu.happy.mynfcapp;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.Uri;
@@ -13,25 +14,27 @@ import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
-import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import edu.happy.mynfcapp.R;
 import edu.happy.tools.ReadInformation;
+import edu.happy.tools.ReadUriRecord;
 import edu.happy.tools.ReadAndWriteTextRecord;
 
 public class RunWindow extends Activity {
 	
-	private Button select; //用于选择的按钮
-	private Button writeUri;//用于跳入写入界面写入Uri
+	private ImageView select; //用于选择的按钮
+	private ImageView writeUri;//用于跳入写入界面写入Uri
 	private String mdata;//存储程序包的名字
 	private NfcAdapter mNfcAdapter;
+	private AlertDialog mDialog;
 	private PendingIntent mPendingIntent;
-	private TextView selected_app;//显示当前存储信息
 	private int method;//表示当前的功能
 	private TextView showinformation;//用于展示nfc标签的内容
+	private ProgressBar bar;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -39,14 +42,29 @@ public class RunWindow extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.run_layout);
 		
-		select = (Button)findViewById(R.id.button_select_app);
-		writeUri = (Button) findViewById(R.id.button_select_uri);
+		select = (ImageView)findViewById(R.id.button_select_app);
+		writeUri = (ImageView) findViewById(R.id.button_select_uri);
 		showinformation = (TextView) findViewById(R.id.showinformation);
-		selected_app =(TextView)findViewById(R.id.selected_app_name);
+		bar = (ProgressBar)findViewById(R.id.progressBar);
 		mNfcAdapter =NfcAdapter.getDefaultAdapter(this);
+	    mDialog = new AlertDialog.Builder(this).setNeutralButton("Ok", null).create();
+
+	        //没有nfc硬件服务
+	        if (mNfcAdapter == null) {
+	            showMessage(R.string.error, R.string.no_nfc);
+	            return;
+	        }
+		
 		mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,getClass()), 0);
 	}
 	
+	//  展示没有nfc的窗口
+    private void showMessage(int title, int message) {
+        mDialog.setTitle(title);
+        mDialog.setMessage(getText(message));
+        mDialog.show();
+    }
+    
 	//点击事件的处理方法
 	public void onClick(View v){
 		Intent intent;
@@ -75,8 +93,9 @@ public class RunWindow extends Activity {
 		case 0:
 			temp = data.getStringExtra("package_name").toString();
 			mdata = temp.substring(temp.indexOf("\n")+1);
-			System.out.println("mpackageName is "+ mdata);
-			selected_app.setText(mdata);
+			String name = data.getStringExtra("appname");
+			System.out.println("mpackageName is "+ name);
+			showinformation.setText(mdata);
 			method = 0;
 			nodata();
 			break;
@@ -86,14 +105,14 @@ public class RunWindow extends Activity {
 				temp = data.getStringExtra("Uri").toString();
 				mdata = "http://"+temp; 
 				System.out.println("Uri is "+ mdata);
-				selected_app.setText(mdata);
+				showinformation.setText(mdata);
 				method = 1;
 				nodata();
 				break;	
 			}else if(resultCode == 1){//处理文本
 				mdata = data.getStringExtra("text").toString();
 				System.out.println("text is "+ mdata);
-				selected_app.setText(mdata);
+				showinformation.setText(mdata);
 				method = 2;
 				nodata();
 				break;	
@@ -162,8 +181,31 @@ public class RunWindow extends Activity {
                 	if(msg !=null){
                 		//一般情况下只有一个ndefmessage和ndefrecord
                 		NdefRecord record = msg[0].getRecords()[0];
-                		ReadAndWriteTextRecord textRecord = new ReadAndWriteTextRecord(record);
-                		information.setData(textRecord.getText()+"\n");
+                		boolean istext = false;
+                		//第一判断内容是否是已知类型，包括RTD_text和RTD_uri
+                		if(record.getTnf() == NdefRecord.TNF_WELL_KNOWN){
+                			//解析已知uri格式
+                			ReadUriRecord urirecord = new ReadUriRecord();
+                			String uri = urirecord.ParseWellKnowUri(record);
+                			if(uri == null){
+                				istext = true;
+                			}else{
+                				information.setData(uri);
+                				System.out.println("Type is uri ");	
+                			}
+                	
+                			if (istext){//解析text格式
+                				ReadAndWriteTextRecord textRecord = new ReadAndWriteTextRecord(record);
+                        		information.setData(textRecord.getText()+"\n");
+                        		System.out.println("Type is text ");
+                			}
+                			
+                		}else if(record.getTnf() == NdefRecord.TNF_ABSOLUTE_URI){//解析绝对uri格式
+                			ReadUriRecord urirecord = new ReadUriRecord();
+            				String uri =urirecord.ParseAbsoluteUri(record);
+            				information.setData(uri);
+            				System.out.println("Type is aburi ");
+                		}
                 		showinformation.setText(information.getTextType()+information.getMaxsize()+information.getData());
                 	}
                 	
@@ -198,11 +240,11 @@ public class RunWindow extends Activity {
 	}
 	private void WriteMessage(NdefMessage message,Tag tag){
 		int size = message.toByteArray().length;
+		Ndef ndef = Ndef.get(tag);
 		try{
-			Ndef ndef = Ndef.get(tag);
 			if(ndef!=null){
 				ndef.connect();
-				
+				System.out.println("connect!!!");
 				if(!ndef.isWritable()){
 					Toast.makeText(this, "这个NFC标签是不可以写入的！", Toast.LENGTH_LONG).show();
 				}
@@ -229,7 +271,7 @@ public class RunWindow extends Activity {
 			Toast.makeText(this, "未知错误！", Toast.LENGTH_LONG).show();
 		}
 //		写入之后把要写入的信息去掉
-		selected_app.setText("");
+		showinformation.setText("");
 		mdata = null;
 	}
 }

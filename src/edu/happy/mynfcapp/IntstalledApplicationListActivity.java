@@ -25,6 +25,7 @@ public class IntstalledApplicationListActivity extends Activity implements OnIte
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
+//		System.out.println("list show");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.select_app_list);
 		listview = (ListView)findViewById(R.id.applist);
@@ -47,6 +48,7 @@ public class IntstalledApplicationListActivity extends Activity implements OnIte
 		// TODO Auto-generated method stub
 		Intent intent = new Intent();
 		intent.putExtra("package_name", list.get(position).getPackageName());
+		intent.putExtra("appname", list.get(position).getAppName());
 		setResult(0,intent);
 		finish();
 	}

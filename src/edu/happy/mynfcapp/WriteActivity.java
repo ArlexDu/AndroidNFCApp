@@ -1,5 +1,6 @@
 package edu.happy.mynfcapp;
 
+import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,12 +34,14 @@ public class WriteActivity extends Activity {
 	        case R.id.done:
 	        	Intent intent = new Intent();
 	        	String text = input_text.getText().toString();
-	        	if(IsUri(text)){
+	        	if(IsUrl(text)){
+	        		//System.out.println("is uri");
 	        		intent.putExtra("Uri", text);
 					setResult(0,intent);
 					finish();
 					break;	
 	        	}else{
+	        		//System.out.println("is text");
 	        		intent.putExtra("text", text);
 					setResult(1,intent);
 					finish();
@@ -47,14 +50,30 @@ public class WriteActivity extends Activity {
 			}
       }
 	//用于区分当前输入内容是否是url格式
-	private boolean IsUri(String s){	
-		 Pattern p = Pattern.compile("^(http|www|ftp|)?(://)?(\\w+(-\\w+)*)(\\.(\\w+(-\\w+)*))*((:\\d+)?)"
-		 		+ "(/(\\w+(-\\w+)*))*(\\.?(\\w)*)(\\?)?(((\\w*%)*(\\w*\\?)*(\\w*:)*(\\w*\\+)*(\\w*\\.)*(\\w*&)"
-		 		+ "*(\\w*-)*(\\w*=)*(\\w*%)*(\\w*\\?)*(\\w*:)*(\\w*\\+)*(\\w*\\.)*(\\w*&)*(\\w*-)*(\\w*=)*)*(\\w*)*)$",
-		 		Pattern.CASE_INSENSITIVE );   
-		 Matcher matcher =p.matcher(s);
-		 boolean is = matcher.matches();
-		 return  is;
+	private boolean IsUrl(String s){
+//		先判断是否包含中文 
+		if(isContainsChinese(s)){
+			 return false;
+		}else{
+			 Pattern p = Pattern.compile("^(http|www|ftp|)?(://)?(\\w+(-\\w+)*)(\\.(\\w+(-\\w+)*))*((:\\d+)?)"
+				 		+ "(/(\\w+(-\\w+)*))*(\\.?(\\w)*)(\\?)?(((\\w*%)*(\\w*\\?)*(\\w*:)*(\\w*\\+)*(\\w*\\.)*(\\w*&)"
+				 		+ "*(\\w*-)*(\\w*=)*(\\w*%)*(\\w*\\?)*(\\w*:)*(\\w*\\+)*(\\w*\\.)*(\\w*&)*(\\w*-)*(\\w*=)*)*(\\w*)*)$",
+				 		Pattern.CASE_INSENSITIVE );   
+			 Matcher matcher =p.matcher(s);
+			 boolean is = matcher.matches();
+			 return  is;
+		}
+	}
+	
+	//是否包含中文 
+	public static boolean isContainsChinese(String str){
+         String reg = "[\u4e00-\u9fa5]";
+         Pattern pat = Pattern.compile(reg);
+	     Matcher matcher = pat.matcher(str);
+	     if (matcher.find())    {
+	           return true;
+	     }
+	     return false;
 	}
 	
 	//重写返回键，避免返回空指针错误
