@@ -4,16 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import edu.happy.tools.ApplicationInfo;
 import edu.happy.tools.MyListAdapter;
 
@@ -21,6 +25,16 @@ public class IntstalledApplicationListActivity extends Activity implements OnIte
 
 	private ArrayList<ApplicationInfo> list = new ArrayList<ApplicationInfo>();
 	private ListView listview ;
+	private ProgressBar bar;
+	Handler myHander = new Handler(){
+		
+		public void handleMessage(Message msg) {
+			if(msg.what == 0){
+				init();
+			}
+			
+		};
+	};
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -29,6 +43,24 @@ public class IntstalledApplicationListActivity extends Activity implements OnIte
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.select_app_list);
 		listview = (ListView)findViewById(R.id.applist);
+		bar = (ProgressBar)findViewById(R.id.list_bar);
+		new Thread(new Runnable() {
+			public void run() {
+				getdata();
+				Message msg = Message.obtain();
+				msg.what = 0;
+				// 发送这个消息到消息队列中
+				myHander.sendMessage(msg);
+			}
+		}).start();
+	}
+	private void init(){
+		bar.setVisibility(View.INVISIBLE);
+		MyListAdapter adapter = new MyListAdapter(this, list);
+		listview.setAdapter(adapter);
+		listview.setOnItemClickListener(this);
+	}
+	private void getdata(){
 		PackageManager packageManager = getPackageManager();
 		List<PackageInfo> packageInfos = packageManager.getInstalledPackages(packageManager.GET_ACTIVITIES);
 		for(PackageInfo packageInfo:packageInfos){
@@ -38,9 +70,7 @@ public class IntstalledApplicationListActivity extends Activity implements OnIte
 			info.setPackageName(packageInfo.packageName);
 			list.add(info);
 		}
-		MyListAdapter adapter = new MyListAdapter(this, list);
-		listview.setAdapter(adapter);
-		listview.setOnItemClickListener(this);
+		
 	}
 	
 	@Override

@@ -95,7 +95,7 @@ public class RunWindow extends Activity {
 			mdata = temp.substring(temp.indexOf("\n")+1);
 			String name = data.getStringExtra("appname");
 			System.out.println("mpackageName is "+ name);
-			showinformation.setText(mdata);
+			showinformation.setText(name);
 			method = 0;
 			nodata();
 			break;
