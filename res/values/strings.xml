@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MyNfcApp</string>
+    <string name="action_settings">Settings</string>
+    <string name="Write">Click to write your commend</string>
+    <string name="title_activity_write">WriteActivity</string>
+    <string name="title_activity_installapp">IntstalledApplicationListActivity</string>
+    <string name="title_activity_runapp">NewWindow</string>
+    <string name="ok">OK</string>
+    <string name="urihint">请输入一个网址，例如：www.baidu.com</string>
+    <string name="error">Error</string>
+    <string name="no_nfc">对不起，您的手机没有NFC设备</string>
+    <string name="nfc_disabled">您的手机的NFC设备没有启动，请您去设置启动</string>
+
+</resources>
